@@ -18,7 +18,7 @@ Postman (for testing)
 
 Quick Setup
 
-Clone the Repository:git clone https://github.com/<your-username>/shortlink.git
+Clone the Repository:git clone https://github.com/yorliabdulai/shortlink.git
 cd shortlink
 
 
