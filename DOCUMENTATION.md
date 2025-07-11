@@ -1,278 +1,341 @@
-ShortLink URL Shortening Service Documentation
-Overview
-ShortLink is a lightweight URL shortening service implemented in raw PHP and MySQL, designed to provide reliable /encode and /decode API endpoints. It uses a custom PDO-based database class and a base-62 hashing algorithm to generate unique short URLs. This project adheres to object-oriented programming principles and is optimized for production use.
-Table of Contents
+# 📘 ShortLink URL Shortening Service Documentation
 
-Features
-Architecture
-Prerequisites
-Installation
-Configuration
-Running the Application
-API Endpoints
-Testing
-Troubleshooting
-Security Considerations
-Extending the Service
-License
+## 📝 Overview
 
-Features
+**ShortLink** is a lightweight and production-ready URL shortening service built using raw PHP and MySQL. It provides robust `/encode` and `/decode` API endpoints, with a base-62 hashing algorithm and a custom PDO-based database class. The system follows object-oriented programming (OOP) principles and is designed for modularity, extensibility, and easy deployment.
 
-Encode Endpoint: Converts long URLs to short URLs (e.g., https://sommalife.com/impact/ → http://shrt.est/ZeAK).
-Decode Endpoint: Retrieves the original URL from a short URL.
-Custom Database Class: Secure MySQL interactions using PDO, avoiding third-party libraries.
-Base-62 Hashing: Generates unique, 6-character short codes (supports ~56.8 million URLs).
-Error Handling: Robust validation and JSON error responses.
-Postman Tests: Includes a Postman collection for automated API testing.
+---
 
-Architecture
+## 📂 Table of Contents
 
-Directory Structure:shortlink/
+* [Features](#features)
+* [Architecture](#architecture)
+* [Prerequisites](#prerequisites)
+* [Installation](#installation)
+* [Configuration](#configuration)
+* [Running the Application](#running-the-application)
+* [API Endpoints](#api-endpoints)
+* [Testing](#testing)
+* [Troubleshooting](#troubleshooting)
+* [Security Considerations](#security-considerations)
+* [Extending the Service](#extending-the-service)
+* [License](#license)
+
+---
+
+## ✅ Features
+
+* 🔗 **Encode Endpoint**: Converts long URLs (e.g., `https://sommalife.com/impact/`) into short URLs (e.g., `http://shrt.est/ZeAK`).
+* 🔓 **Decode Endpoint**: Resolves a short URL back to its original long form.
+* 🔐 **Secure Database Class**: Built with PDO for safe, structured MySQL interactions.
+* 🧮 **Base-62 Hashing**: Generates unique 6-character codes (up to \~56.8 million entries).
+* ⚠️ **Error Handling**: Validates input and returns structured JSON error responses.
+* 🧪 **Postman Test Suite**: Included for endpoint testing.
+
+---
+
+## 🧱 Architecture
+
+### 📁 Directory Structure
+
+```
+shortlink/
 ├── config/
-│   └── database.php (Database configuration)
+│   └── database.php (Database config)
 ├── classes/
-│   ├── Database.php (Custom PDO-based database class)
-│   └── UrlShortener.php (URL encoding/decoding logic)
+│   ├── Database.php (PDO-based DB handler)
+│   └── UrlShortener.php (Core logic)
 ├── public/
 │   ├── index.php (Front controller)
 │   ├── encode.php (/encode endpoint)
 │   ├── decode.php (/decode endpoint)
-│   └── .htaccess (URL rewriting)
+│   └── .htaccess (Apache rewrite rules)
 ├── tests/
-│   └── ShortLinkAPI.postman_collection.json (Postman test collection)
-├── DOCUMENTATION.md
+│   └── ShortLinkAPI.postman_collection.json (Postman collection)
 ├── README.md
+├── DOCUMENTATION.md
 └── .gitignore
+```
 
+### 🔧 Key Components
 
-Components:
-Database.php: Handles MySQL connections and queries using PDO.
-UrlShortener.php: Implements encoding/decoding logic with a base-62 hashing algorithm.
-index.php: Routes requests to /encode or /decode.
-.htaccess: Rewrites URLs to the front controller.
+* `Database.php`: Handles DB connections and queries using PDO.
+* `UrlShortener.php`: Encodes and decodes URLs with base-62 logic.
+* `index.php`: Acts as the entry point and routes requests.
+* `.htaccess`: Enables clean URLs via Apache rewrite rules.
 
+---
 
+## 🧰 Prerequisites
 
-Prerequisites
+* **PHP** ≥ 7.4
+* **MySQL** ≥ 5.7
+* **Apache** with `mod_rewrite` enabled
+* **Git** (for cloning the project)
+* **Postman** (for testing APIs)
+* Optional: **Composer** (for adding dev dependencies, not used in core)
 
-PHP: Version 7.4 or higher
-MySQL: Version 5.7 or higher
-Apache: With mod_rewrite enabled
-Postman: For API testing
-Git: For version control
-Optional: Composer for development dependencies (not used in core functionality)
+---
 
-Installation
+## ⚙️ Installation
 
-Clone the Repository:git clone https://github.com/yorliabdulai/shortlink.git
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/yorliabdulai/shortlink.git
 cd shortlink
+```
 
+### 2. Set Up the Database
 
-Set Up the Database:
-Create a MySQL database:CREATE DATABASE shortlink;
+```sql
+CREATE DATABASE shortlink;
 USE shortlink;
 
-
-Create the urls table:CREATE TABLE urls (
+CREATE TABLE urls (
     id INT AUTO_INCREMENT PRIMARY KEY,
     long_url VARCHAR(2048) NOT NULL,
     short_code VARCHAR(10) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (short_code)
 );
+```
 
+### 3. Configure the Database
 
+```bash
+cp config/database.php.example config/database.php
+```
 
+Edit `config/database.php`:
 
-Configure Database:
-Copy config/database.php.example to config/database.php:cp config/database.php.example config/database.php
-
-
-Edit config/database.php with your MySQL credentials:return [
+```php
+return [
     'host' => 'localhost',
     'dbname' => 'shortlink',
     'user' => 'your_username',
     'password' => 'your_password',
     'charset' => 'utf8mb4'
 ];
+```
 
+### 4. Set Up the Web Server
 
+#### Option A: Apache
 
+* Point your Apache `DocumentRoot` to the `public/` folder.
+* Enable `mod_rewrite`.
+* Ensure `AllowOverride All` is enabled.
 
-Set Up the Web Server:
-Apache:
-Point Apache to the public/ directory.
-Ensure mod_rewrite is enabled and AllowOverride All is set in your Apache configuration.
+#### Option B: PHP Built-in Server (Development)
 
-
-PHP Built-in Server (for development):cd public
+```bash
+cd public
 php -S localhost:8000
+```
 
+---
 
+## ⚙️ Configuration
 
+* **Database**: Ensure `config/database.php` has valid credentials.
+* **Base URL**: Edit `UrlShortener.php` to set your domain (e.g., `http://shrt.est/`).
+* **Permissions**:
 
+  ```bash
+  chmod 600 config/database.php
+  chmod 755 public
+  ```
 
-Configuration
+---
 
-Database: Ensure config/database.php contains valid MySQL credentials.
-Base URL: The short URL prefix (http://shrt.est/) is defined in classes/UrlShortener.php. Update it for production (e.g., your domain).
-File Permissions:
-Restrict access to config/database.php (e.g., chmod 600 config/database.php).
-Ensure the public/ directory is web-accessible.
+## 🚀 Running the Application
 
+### For Development
 
-
-Running the Application
-
-Development:cd public
+```bash
+cd public
 php -S localhost:8000
+```
 
+Visit: `http://localhost:8000`
 
-Production:
-Configure Apache to serve the public/ directory.
-Ensure .htaccess is processed for URL rewriting.
-Use HTTPS for security.
+### For Production
 
+* Deploy the `public/` directory using Apache or Nginx.
+* Use `.htaccess` for URL routing.
+* Enforce HTTPS for secure API access.
 
+---
 
-API Endpoints
-Both endpoints accept POST requests with JSON payloads and return JSON responses.
-/encode
+## 📡 API Endpoints
 
-Method: POST
-URL: http://<your-domain>/encode
-Request Body:{
-    "url": "https://sommalife.com/impact/"
+All endpoints use `POST` with `application/json`.
+
+### 🔸 `/encode`
+
+**Request**
+
+```json
+{
+  "url": "https://sommalife.com/impact/"
 }
+```
 
+**Response (Success)**
 
-Response (Success):{
-    "short_url": "http://shrt.est/ZeAK"
+```json
+{
+  "short_url": "http://shrt.est/ZeAK"
 }
+```
 
+**Error Responses**
 
-Response (Error):{
-    "error": "Invalid URL"
+```json
+{ "error": "Invalid URL" }
+{ "error": "URL is required" }
+```
+
+**Example**
+
+```bash
+curl -X POST http://localhost:8000/encode \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://sommalife.com/impact/"}'
+```
+
+---
+
+### 🔸 `/decode`
+
+**Request**
+
+```json
+{
+  "url": "http://shrt.est/ZeAK"
 }
+```
 
-or{
-    "error": "URL is required"
+**Response (Success)**
+
+```json
+{
+  "long_url": "https://sommalife.com/impact/"
 }
+```
 
+**Error Responses**
 
-Example:curl -X POST http://localhost:8000/encode -H "Content-Type: application/json" -d '{"url": "https://sommalife.com/impact/"}'
+```json
+{ "error": "Short URL not found" }
+{ "error": "Short URL is required" }
+```
 
+**Example**
 
+```bash
+curl -X POST http://localhost:8000/decode \
+  -H "Content-Type: application/json" \
+  -d '{"url": "http://shrt.est/ZeAK"}'
+```
 
-/decode
+---
 
-Method: POST
-URL: http://<your-domain>/decode
-Request Body:{
-    "url": "http://shrt.est/ZeAK"
-}
+## 🧪 Testing
 
+### ✅ Manual Testing
 
-Response (Success):{
-    "long_url": "https://sommalife.com/impact/"
-}
+* Import `tests/ShortLinkAPI.postman_collection.json` into Postman.
+* Set environment variable `baseUrl = http://localhost:8000`.
+* Use `/encode` and `/decode` with example payloads.
+* Test error responses (e.g., missing or invalid URLs).
 
+### 🔁 Automated Testing
 
-Response (Error):{
-    "error": "Short URL not found"
-}
+* The Postman collection contains automated tests:
 
-or{
-    "error": "Short URL is required"
-}
+  * Verifies status codes.
+  * Checks presence of `short_url` or `long_url`.
 
+**Run It:**
 
-Example:curl -X POST http://localhost:8000/decode -H "Content-Type: application/json" -d '{"url": "http://shrt.est/ZeAK"}'
+* Click **Run Collection** in Postman and review the test results.
 
+### 📊 Database Verification
 
+```sql
+SELECT * FROM urls;
+```
 
-Testing
-Manual Testing
+Ensure records are saved correctly.
 
-Use Postman to test the API:
-Import tests/ShortLinkAPI.postman_collection.json into Postman.
-Set the baseUrl environment variable to http://localhost:8000 (or your domain).
-Send requests to /encode and /decode with the payloads above.
-Verify responses match the expected format.
+---
 
+## 🛠 Troubleshooting
 
+### Database Errors
 
-Automated Testing
+* Verify MySQL is running:
 
-The Postman collection includes tests:
-Encode URL: Checks for 200 OK and either short_url or error in the response.
-Decode URL: Checks for 200 OK and either long_url or error in the response.
+  ```bash
+  systemctl status mysql
+  ```
+* Confirm DB credentials and table exist.
 
+### 404 Errors
 
-Run the collection in Postman:
-Click Run Collection and select all requests.
-Review test results.
+* Ensure `.htaccess` is enabled and processed.
+* Confirm Apache points to `public/`.
 
+### JSON Errors
 
+* Set `Content-Type: application/json` in requests.
+* Validate JSON syntax.
 
-Database Verification
+### CORS Issues
 
-Check the urls table:SELECT * FROM urls;
+Add headers to `public/index.php`:
 
-
-Ensure long_url, short_code, and created_at are correct.
-
-Troubleshooting
-
-Database Connection Errors:
-Verify MySQL is running (systemctl status mysql).
-Check credentials in config/database.php.
-Ensure the shortlink database and urls table exist.
-
-
-404 Errors:
-Confirm .htaccess is processed (AllowOverride All in Apache config).
-Verify the web server points to public/.
-
-
-JSON Errors:
-Ensure Content-Type: application/json header is set in requests.
-Validate JSON payload syntax.
-
-
-CORS Issues (browser-based testing):
-Add CORS headers to public/index.php:header('Access-Control-Allow-Origin: *');
+```php
+header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST');
 header('Access-Control-Allow-Headers: Content-Type');
+```
 
+### Logs
 
+* Check PHP or Apache logs (e.g., `/var/log/php_errors.log`).
 
+---
 
-Logs:
-Check PHP error logs (e.g., /var/log/php_errors.log or Apache logs).
+## 🔒 Security Considerations
 
+* **SQL Injection**: Prevented with PDO prepared statements.
+* **Input Validation**: URLs validated with `filter_var`.
+* **Sensitive Files**: `config/database.php` excluded via `.gitignore`.
 
+### Production Tips
 
-Security Considerations
+* Use **HTTPS** for all requests.
+* Apply **rate limiting** to prevent abuse.
+* Restrict DB user to only `shortlink` database.
+* Add **CSRF protection** if building a web interface.
+* Schedule **automatic backups**.
 
-SQL Injection: Prevented using PDO prepared statements.
-Input Validation: URLs are validated with filter_var.
-Sensitive Data: config/database.php is excluded from version control.
-Production:
-Use HTTPS to secure API requests.
-Implement rate limiting to prevent abuse.
-Restrict database user permissions to the shortlink database.
-Add CSRF protection if extending to a web interface.
+---
 
+## 🚀 Extending the Service
 
+* 🔁 **Redirect Endpoint**: Add a `GET /:shortCode` for instant redirection.
+* 📊 **Analytics**: Add a `clicks` column to track usage.
+* ⏳ **Expiration**: Use `expires_at` for time-limited URLs.
+* 🌐 **Frontend**: Build a web UI with HTML/CSS/JS.
+* ✅ **Unit Tests**: Implement PHPUnit for logic testing.
 
-Extending the Service
+---
 
-Redirect Endpoint: Add a GET /:shortCode endpoint to redirect short URLs to their original URLs.
-Analytics: Track clicks by adding a clicks column to the urls table.
-Expiration: Add an expires_at column for temporary URLs.
-Frontend: Build a simple HTML interface for user interaction.
-Unit Tests: Add PHPUnit tests for Database and UrlShortener classes.
+## 📄 License
 
-License
-This project is licensed under the MIT License.
+This project is open-sourced under the **MIT License**.
+You're free to use, modify, and distribute it.
